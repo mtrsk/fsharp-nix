@@ -1,0 +1,41 @@
+name: "[Nix] Build Container"
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - '.github/**'
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'src/**'
+      - 'tests/**'
+  pull_request:
+    paths:
+      - '.github/**'
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'src/**'
+      - 'tests/**'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ github.token }}
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v24
+      with:
+        # Mostly to avoid GitHub rate limiting
+        extra_nix_config: |
+          access-tokens = github.com=${{ github.token }}
+
+    - name: Install Nix Cache
+      uses: DeterminateSystems/magic-nix-cache-action@main
+
+    - name: Build OCI Image
+      run: nix build .#dockerImage
